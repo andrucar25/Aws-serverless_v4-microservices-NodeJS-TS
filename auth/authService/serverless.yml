@@ -1,0 +1,47 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: andrucare
+# "service" is the name of this project. This will also be added to your AWS resource names.
+service: authService
+
+provider:
+  name: aws
+  runtime: nodejs22.x
+  region: us-east-1
+  environment:
+    CLIENT_ID: ${ssm:/CLIENT_ID}  #Securely fetch from ssm the parameter CLIENT_ID
+
+build:
+  esbuild:
+    bundle: true
+    minify: false
+    exclude:
+      - "@aws-sdk/*"
+
+functions:
+  signUp:
+    handler: handlers/signUp/index.signUp
+    events:
+      - httpApi:
+          path: /signUp
+          method: post
+
+  confirmSignUp:
+    handler: handlers/signUp/confirmSignUp.confirmSignUp
+    events:
+      - httpApi:
+          path: /confirmSignUp
+          method: post
+
+  signIn:
+    handler: handlers/signIn/index.signIn
+    events:
+      - httpApi:
+          path: /sign-in
+          method: post
+
+  signOut:
+    handler: handlers/signOut/index.signOut
+    events:
+      - httpApi:
+          path: /sign-out
+          method: post
