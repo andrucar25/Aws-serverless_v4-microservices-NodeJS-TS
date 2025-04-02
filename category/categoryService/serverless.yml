@@ -9,6 +9,7 @@ provider:
   environment:
     BUCKET_NAME: !Ref CategoryImagesBucket  #get bucket name 
     DYNAMO_TABLE: !Ref CategoryTable
+    SNS_TOPIC_ARN: !Ref CategoryCleanupTopic
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -19,8 +20,13 @@ provider:
       Action:
         - dynamodb:PutItem
         - dynamodb:UpdateItem
+        - dynamodb:Scan
+        - dynamodb:DeleteItem
       Resource:
         - !GetAtt CategoryTable.Arn
+    - Effect: Allow
+      Action: sns:Publish
+      Resource: !Ref CategoryCleanupTopic
 
 build:
   esbuild:
@@ -48,6 +54,17 @@ resources:
           - AttributeName: fileName
             KeyType: HASH
 
+    CategoryCleanupTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: CategoryCleanupTopic
+
+    CategoryCleanupSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        TopicArn: !Ref CategoryCleanupTopic 
+        Protocol: email
+        Endpoint: andrucar25@gmail.com
 
 functions:
   getUploadUrl:
@@ -64,4 +81,9 @@ functions:
           bucket: !Ref CategoryImagesBucket
           event: s3:ObjectCreated:Put #trigger event when a new object is upload to s3 bucket
           existing: true
+
+  cleanupCategories:
+    handler: handlers/cleanupCategories.cleanupCategories
+    events:
+      - schedule: rate(2 minutes)  #runs lambda every 2 minutes
 

@@ -14,7 +14,7 @@ export const signUp = async (event) => {
 
   const input:SignUpCommandInput  = {
     ClientId: CLIENT_ID,
-    Username: username,
+    Username: email,
     Password: password,
     UserAttributes: [
       {Name: 'email', Value: email},
