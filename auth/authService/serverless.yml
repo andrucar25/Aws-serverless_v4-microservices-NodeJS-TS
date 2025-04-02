@@ -9,6 +9,26 @@ provider:
   region: us-east-1
   environment:
     CLIENT_ID: ${ssm:/CLIENT_ID}  #Securely fetch from ssm the parameter CLIENT_ID
+    REGION: "us-east-1"
+  # iam:
+  #   role:
+  #     statements:
+  #       - Effect: Allow
+  #         Action: 
+  #           - dynamodb:PutItem
+  #           - dynamodb:Scan
+  #         Resource:
+  #           Fn::GetAtt:
+  #             - UserTable
+  #             - Arn
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+      Resource:
+        Fn::GetAtt:
+        - UsersTable
+        - Arn
 
 build:
   esbuild:
@@ -16,6 +36,20 @@ build:
     minify: false
     exclude:
       - "@aws-sdk/*"
+
+resources:
+  Resources:
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: Users
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: "userId"
+            AttributeType: "S"
+        KeySchema:
+          - AttributeName: userId
+            KeyType: "HASH"
 
 functions:
   signUp:

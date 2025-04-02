@@ -1,7 +1,7 @@
 import {CognitoIdentityProviderClient, InitiateAuthCommand, InitiateAuthCommandInput} from "@aws-sdk/client-cognito-identity-provider";
 
 const client = new CognitoIdentityProviderClient({
-  region: 'us-east-1'
+  region: process.env.REGION
 });
 
 const CLIENT_ID = process.env.CLIENT_ID;

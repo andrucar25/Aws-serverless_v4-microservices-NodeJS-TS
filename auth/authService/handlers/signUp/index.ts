@@ -1,7 +1,8 @@
 import {CognitoIdentityProviderClient, SignUpCommand, SignUpCommandInput} from "@aws-sdk/client-cognito-identity-provider";
+import { UserModel } from "../../models/UserModel";
 
 const client = new CognitoIdentityProviderClient({
-  region: 'us-east-1'
+  region: process.env.REGION
 });
 
 const CLIENT_ID = process.env.CLIENT_ID;
@@ -9,10 +10,11 @@ const CLIENT_ID = process.env.CLIENT_ID;
 
 export const signUp = async (event) => {
   const {email, password, fullName} = JSON.parse(event.body);
+  const username = fullName.replace(/\s+/g, '_');
 
   const input:SignUpCommandInput  = {
     ClientId: CLIENT_ID,
-    Username: email,
+    Username: username,
     Password: password,
     UserAttributes: [
       {Name: 'email', Value: email},
@@ -24,6 +26,10 @@ export const signUp = async (event) => {
     const command = new SignUpCommand(input);
 
     await client.send(command);
+
+    //save user in DynamoDB
+    const user = new UserModel(email, username);
+    await user.save();
 
     return {
       statusCode: 200,

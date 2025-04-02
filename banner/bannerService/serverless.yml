@@ -1,0 +1,66 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: andrucare
+# "service" is the name of this project. This will also be added to your AWS resource names.
+service: bannerService
+
+provider:
+  name: aws
+  runtime: nodejs22.x
+  environment:
+    BUCKET_NAME: !Ref BannerImagesBucket  #get bucket name 
+    DYNAMO_TABLE: !Ref BannersTable
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:PutObject
+      Resource:
+        - !Sub "${BannerImagesBucket.Arn}/*"  #permissions for objects inside banner (operations like update object, get object)
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+      Resource:
+        - !GetAtt BannersTable.Arn  #get arn of table
+
+build:
+  esbuild:
+    bundle: true
+    minify: false
+    exclude:
+      - "@aws-sdk/*"
+      
+resources:
+  Resources:
+    BannerImagesBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: banner-images-sls-ms-ts-test
+
+    BannersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: Banners
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: fileName
+            AttributeType: S
+        KeySchema:
+          - AttributeName: fileName
+            KeyType: HASH
+
+
+functions:
+  getUploadUrl:
+    handler: handlers/uploadBanner.uploadUrl
+    events:
+      - httpApi:
+          path: /upload-banner
+          method: post
+
+  confirmUpload:
+    handler: handlers/confirmUpload.confirmUpload
+    events:
+      - s3: #specifies an s3 event trigger
+          bucket: !Ref BannerImagesBucket
+          event: s3:ObjectCreated:Put #function is triggered when new object is uploaded to s3 bucket
+          existing: true #ensures the function listens to events for existing objects in bucket
+
