@@ -8,7 +8,6 @@ export const confirmUpload = async (event) => {
     const bucketName = process.env.BUCKET_NAME;
 
     const record = event.Records[0]
-    console.log("🚀 ~ record:", record)
     const fileName = record.s3.object.key;
     const imageUrl = `https://${bucketName}.s3.amazonaws.com/${fileName}`
   
