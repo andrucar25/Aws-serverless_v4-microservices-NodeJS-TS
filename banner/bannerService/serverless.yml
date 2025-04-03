@@ -18,6 +18,7 @@ provider:
     - Effect: Allow
       Action:
         - dynamodb:PutItem
+        - dynamodb:Scan
       Resource:
         - !GetAtt BannersTable.Arn  #get arn of table
 
@@ -64,3 +65,10 @@ functions:
           event: s3:ObjectCreated:Put #function is triggered when new object is uploaded to s3 bucket
           existing: true #ensures the function listens to events for existing objects in bucket
 
+  getAllBanners:
+    handler: handlers/getAllBanners.getAllBanners
+    events:
+      - httpApi:
+          path: /banners
+          method: get
+          # authorizer: myCognitoAuth

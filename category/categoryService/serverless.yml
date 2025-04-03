@@ -87,3 +87,9 @@ functions:
     events:
       - schedule: rate(2 minutes)  #runs lambda every 2 minutes
 
+  getAllCategories:
+    handler: handlers/getAllCategories.getAllCategories
+    events:
+      - httpApi:
+          path: /categories
+          method: get

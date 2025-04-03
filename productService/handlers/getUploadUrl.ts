@@ -1,16 +1,21 @@
 import {S3Client, PutObjectCommand} from "@aws-sdk/client-s3";
 import {getSignedUrl} from "@aws-sdk/s3-request-presigner";
 import { DynamoDBClient, PutItemCommand, PutItemCommandInput } from '@aws-sdk/client-dynamodb';
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import {v4 as v4uuid} from 'uuid';
 
 const s3Client = new S3Client({region: 'us-east-1'});
 const dynamoDbClient = new DynamoDBClient({region: 'us-east-1'});
 
-export const getUploadUrl = async (event) => {
+export const getUploadUrl = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
     const bucketName = process.env.BUCKET_NAME;
+    
+    //extract email from cognito JWT
+    const email = event.requestContext.authorizer?.jwt.claims.email;
+    const body = JSON.parse(event.body || "{}");
 
-    const {fileName, fileType, productName, productPrice, description, quantity, category, email} = JSON.parse(event.body)
+    const {fileName, fileType, productName, productPrice, description, quantity, category} = body;
 
     if(!fileName || !fileType || !productName || !productPrice || !description  
       || !quantity || !category || !email){
